@@ -22,7 +22,7 @@
         "children": [],
         "isRemovable": true,
         "filePath": "animal-reserve-dilushika/lambda.js",
-        "code": "let AWS = require('aws-sdk');\nlet rekog = new AWS.Rekognition();\n\n\nexports.handler = function(event, context, callback) {\n    //console.log(JSON.stringify(event, null,2));\n    let s3 = event.Records[0].s3;\n    rekog.detectLabels({\n        Image: {\n            S3Object: {\n                Bucket: s3.bucket.name,\n                Name: s3.object.key\n            }\n        },\n        MaxLabels: 1\n    }).promise()\n    .then(data => {\n        console.log(data);\n        callback(null, {});\n    })\n    .catch(err => callback(err));\n\n   // callback(null, {\"message\": \"Successfully executed\"});\n}",
+        "code": "let AWS = require('aws-sdk');\nconst ddb = new AWS.DynamoDB.DocumentClient();\nlet rekog = new AWS.Rekognition();\n\n\nexports.handler = function (event, context, callback) {\n    //console.log(JSON.stringify(event, null,2));\n    let s3 = event.Records[0].s3;\n    rekog.detectLabels({\n        Image: {\n            S3Object: {\n                Bucket: s3.bucket.name,\n                Name: s3.object.key\n            }\n        },\n        MaxLabels: 1\n    }).promise()\n        .then(data => {\n            let lable = data.lables[0].Name;\n            ddb.put({\n                TableName: 'Animal-app-dilushika',\n                Item: {\n                    'name': s3.object.key,\n                    'lable': lable\n                }\n            }).promise()\n                .then((data) => {\n                    callback(null, {});\n                    //your logic goes here\n                })\n                .catch((err) => {\n                    //handle error\n                    callback(err);\n                });\n            console.log(data);\n            \n        })\n        .catch(err => callback(err));\n\n    // callback(null, {\"message\": \"Successfully executed\"});\n}",
         "config": {
           "runtime": "nodejs8.10",
           "handler": "handler",
@@ -86,6 +86,39 @@
             "name": "td-animal-storage"
           }
         }
+      },
+      "ddbAnimalAppDilushika": {
+        "name": "ddbAnimalAppDilushika",
+        "type": "DynamoDB",
+        "config": {
+          "mode": 0,
+          "operation": "put",
+          "table": {
+            "arn": "",
+            "name": "Animal-app-dilushika",
+            "partitionKey": "name",
+            "partitionKeyType": "S",
+            "hasSortKey": true,
+            "sortKey": "lable",
+            "sortKeyType": "S",
+            "payPerRequest": true,
+            "mode": 0
+          },
+          "isGlobalEditMode": false,
+          "parameters": {
+            "TableName": "Animal-app-dilushika",
+            "Item": {
+              "name": "@{s3.object.key}",
+              "lable": "@{lable}"
+            }
+          },
+          "triggerParams": {},
+          "validator": {
+            "validatableFields": {},
+            "validity": true
+          },
+          "valid": true
+        }
       }
     },
     "customTemplate": {
@@ -103,7 +136,15 @@
       }
     ],
     "packageJSON": {
-      "dependencies": {}
+      "dependencies": {
+        "aws-sdk": {
+          "name": "aws-sdk",
+          "language": "javascript",
+          "version": "2.176.0",
+          "dev": true,
+          "notRemovable": false
+        }
+      }
     }
   },
   "PROJECT_META": {
@@ -113,7 +154,7 @@
     "projectRegion": "us-east-2",
     "platform": "AWS",
     "platformRegions": {},
-    "lastSave": 1573111472176
+    "lastSave": 1573112510749
   },
   "VCS_STATE": {
     "provider": "GitHub",
