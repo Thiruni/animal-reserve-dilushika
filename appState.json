@@ -22,7 +22,7 @@
         "children": [],
         "isRemovable": true,
         "filePath": "animal-reserve-dilushika/lambda.js",
-        "code": "let AWS = require('aws-sdk');\nconst ddb = new AWS.DynamoDB.DocumentClient();\nlet rekog = new AWS.Rekognition();\n\n\nexports.handler = function (event, context, callback) {\n    //console.log(JSON.stringify(event, null,2));\n    let s3 = event.Records[0].s3;\n    rekog.detectLabels({\n        Image: {\n            S3Object: {\n                Bucket: s3.bucket.name,\n                Name: s3.object.key\n            }\n        },\n        MaxLabels: 1\n    }).promise()\n        .then(data => {\n            let lable = data.Lables[0].Name;\n            ddb.put({\n                TableName: 'Animal-app-dilushika',\n                Item: {\n                    'name': s3.object.key,\n                    'lable': lable\n                }\n            }).promise()\n                .then((data) => {\n                    callback(null, {});\n                    //your logic goes here\n                })\n                .catch((err) => {\n                    //handle error\n                    callback(err);\n                });\n            console.log(data);\n            \n        })\n        .catch(err => callback(err));\n\n    // callback(null, {\"message\": \"Successfully executed\"});\n}",
+        "code": "let AWS = require('aws-sdk');\nconst ddb = new AWS.DynamoDB.DocumentClient();\nlet rekog = new AWS.Rekognition();\n\n\nexports.handler = function (event, context, callback) {\n    //console.log(JSON.stringify(event, null,2));\n    let s3 = event.Records[0].s3;\n    rekog.detectLabels({\n        Image: {\n            S3Object: {\n                Bucket: s3.bucket.name,\n                Name: s3.object.key\n            }\n        },\n        MaxLabels: 1\n    }).promise()\n        .then(data => {\n            let lable = data.Labels[0].Name;\n            ddb.put({\n                TableName: 'Animal-app-dilushika',\n                Item: {\n                    'name': s3.object.key,\n                    'lable': lable\n                }\n            }).promise()\n                .then((data) => {\n                    callback(null, {});\n                    //your logic goes here\n                })\n                .catch((err) => {\n                    //handle error\n                    callback(err);\n                });\n            console.log(data);\n            \n        })\n        .catch(err => callback(err));\n\n    // callback(null, {\"message\": \"Successfully executed\"});\n}",
         "config": {
           "runtime": "nodejs8.10",
           "handler": "handler",
@@ -154,7 +154,7 @@
     "projectRegion": "us-east-2",
     "platform": "AWS",
     "platformRegions": {},
-    "lastSave": 1573112785073
+    "lastSave": 1573113012291
   },
   "VCS_STATE": {
     "provider": "GitHub",
