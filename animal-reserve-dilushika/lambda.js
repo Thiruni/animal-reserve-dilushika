@@ -16,7 +16,7 @@ exports.handler = function (event, context, callback) {
         MaxLabels: 1
     }).promise()
         .then(data => {
-            let lable = data.lables[0].Name;
+            let lable = data.Lables[0].Name;
             ddb.put({
                 TableName: 'Animal-app-dilushika',
                 Item: {
